@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  build:
+    name: Build dune for ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            name: x86_64-apple-darwin
+            output: .#dune.dynamic
+          - os: macos-14
+            name: aarch64-apple-darwin
+            output: .#dune.dynamic
+          - os: ubuntu-latest
+            name: x86_64-unknown-linux-musl
+            output: .#dune.static
+    steps:
+      - run: echo NAME=dune-${{ github.ref_name }}-${{ matrix.name }} >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Build dune
+        run: nix build ${{ matrix.output }}
+      - name: Create dune tarball
+        run: |
+          cp -rL result $NAME
+          chmod -R u+w $NAME
+          tar czf $NAME.tar.gz $NAME
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "*.tar.gz"
