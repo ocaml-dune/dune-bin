@@ -30,9 +30,6 @@ let
         });
       });
   };
-  pkgs-with-overlay = pkgs.appendOverlays [ dune-overlay ];
-  dune-pkg = if static then
-    pkgs-with-overlay.pkgsCross.musl64.ocamlPackages.dune
-  else
-    pkgs-with-overlay.ocamlPackages.dune;
-in dune-pkg
+  pkgs-out = let pkgs-with-overlay = pkgs.appendOverlays [ dune-overlay ];
+  in if static then pkgs-with-overlay.pkgsCross.musl64 else pkgs-with-overlay;
+in pkgs-out.ocamlPackages.dune

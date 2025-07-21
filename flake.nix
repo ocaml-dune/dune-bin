@@ -10,24 +10,22 @@
   outputs = { self, flake-utils, nixpkgs, ocaml-overlays }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system}.appendOverlays
+        pkgs = (import nixpkgs { inherit system; }).appendOverlays
           [ ocaml-overlays.overlays.default ];
+
         # Returns a set of dune packages with keys "dynamic" and "static" which
         # correspond to a dynamically-linked and statically-linked instance of
         # dune, respectively.
-        make-dune-pkgs = { ref, rev }:
-          let
-            make-dune-pkg = { static }:
-              import ./dune-versioned.nix {
-                ref = ref;
-                rev = rev;
-                static = static;
-                pkgs = pkgs;
-              };
-          in {
-            dynamic = make-dune-pkg { static = false; };
-            static = make-dune-pkg { static = true; };
+        make-dune-pkgs = { ref, rev }: {
+          dynamic = import ./dune-versioned.nix {
+            inherit ref rev pkgs;
+            static = false;
           };
+          static = import ./dune-versioned.nix {
+            inherit ref rev pkgs;
+            static = true;
+          };
+        };
       in {
         packages = {
           dune_3_19_1 = make-dune-pkgs {
