@@ -10,26 +10,41 @@ let
   # executable to print the correct version in the output of `dune --version`.
   version-tag-from-changelog = ''
     export PATH=${pkgs.git}/bin:$PATH
-    export GIT_COMMITTER_NAME=user GIT_COMMITTER_EMAIL=user@example.com GIT_AUTHOR_NAME=user GIT_AUTHOR_EMAIL=user@example.com
+    export GIT_COMMITTER_NAME=user
+    export GIT_COMMITTER_EMAIL=user@example.com
+    export GIT_AUTHOR_NAME=user
+    export GIT_AUTHOR_EMAIL=user@example.com
     git init
     git add .
     git commit --allow-empty -m dummy
     git tag ${ref} -am dummy
   '';
-  bootstrap-suffix = if static then " --static" else "";
-  dune-overlay = self: super: {
-    ocamlPackages = super.ocaml-ng.ocamlPackages_5_3.overrideScope
-      (oself: osuper: {
-        dune_3 = osuper.dune_3.overrideAttrs (a: {
-          src = dune-src;
-          preBuild = ''
-            ${version-tag-from-changelog}
-            ocaml boot/bootstrap.ml${bootstrap-suffix}
-            _boot/dune.exe subst
-          '';
-        });
-      });
+  dune = let
+    pkgs' = if static then
+      let arch = pkgs.stdenv.hostPlatform.parsed.cpu.name;
+      in if arch == "x86_64" then
+        pkgs.pkgsCross.musl64
+      else if arch == "aarch64" then
+        pkgs.pkgsCross.aarch64-multiplatform-musl
+      else
+        throw "Unsupported architecture: ${arch}"
+    else
+      pkgs;
+  in pkgs'.stdenv.mkDerivation {
+    pname = "dune";
+    version = ref;
+    src = dune-src;
+    nativeBuildInputs = with pkgs'.ocamlPackages; [ ocaml ];
+    strictDeps = true;
+    preBuild = ''
+      ${version-tag-from-changelog}
+      ocaml boot/bootstrap.ml${if static then " --static" else ""}
+      _boot/dune.exe subst
+    '';
+    buildFlags = [ "release" ];
+    dontAddPrefix = true;
+    dontAddStaticConfigureFlags = !static;
+    configurePlatforms = [ ];
+    installFlags = [ "PREFIX=${placeholder "out"}" ];
   };
-  pkgs-out = let pkgs-with-overlay = pkgs.appendOverlays [ dune-overlay ];
-  in if static then pkgs-with-overlay.pkgsCross.musl64 else pkgs-with-overlay;
-in pkgs-out.ocamlPackages.dune
+in dune
