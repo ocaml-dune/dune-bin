@@ -2,16 +2,11 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    ocaml-overlays = {
-      url = "github:nix-ocaml/nix-overlays";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
-  outputs = { self, flake-utils, nixpkgs, ocaml-overlays }:
+  outputs = { self, flake-utils, nixpkgs }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = (import nixpkgs { inherit system; }).appendOverlays
-          [ ocaml-overlays.overlays.default ];
+        pkgs = (import nixpkgs { inherit system; });
 
         # Returns a set of dune packages with keys "dynamic" and "static" which
         # correspond to a dynamically-linked and statically-linked instance of
