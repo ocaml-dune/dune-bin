@@ -1,9 +1,13 @@
-{ ref, rev, static, pkgs }:
+{ ref, rev, static, pkgs, completion }:
 let
   dune-src = fetchGit {
     url = "https://github.com/ocaml/dune";
     ref = ref;
     rev = rev;
+  };
+  completion-src = fetchGit {
+    url = "https://github.com/gridbugs/dune-completion-scripts";
+    inherit (completion) ref rev;
   };
   # This creates a git repo and creates an annotated tag named after the
   # current version of dune. This is necessary for the resulting dune
@@ -45,6 +49,10 @@ let
     dontAddPrefix = true;
     dontAddStaticConfigureFlags = !static;
     configurePlatforms = [ ];
+    preInstall = ''
+      mkdir -p $out/share/bash-completion/completions
+      cp ${completion-src}/bash.sh $out/share/bash-completion/completions/dune
+    '';
     installFlags = [ "PREFIX=${placeholder "out"}" ];
   };
 in dune
