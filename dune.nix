@@ -52,6 +52,7 @@ let
     preInstall = ''
       mkdir -p $out/share/bash-completion/completions
       cp ${completion-src}/bash.sh $out/share/bash-completion/completions/dune
+      cp -r ${./extra}/* $out
     '';
     installFlags = [ "PREFIX=${placeholder "out"}" ];
   };
