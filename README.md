@@ -11,6 +11,12 @@ them into an appropriate directory such as `/usr/local`, `~/.local`, or `/opt`.
 Supported platforms are currently x86_64-linux (statically linked with musl for
 better compatibility with non-glibc distros), x86_64-macos and aarch64-macos.
 
+## Installation
+
+To install the binaries released here, use the 
+[dune-bin-install](https://github.com/ocaml-dune/dune-bin-install) script, or
+see that script for manual installation.
+
 ## Release Process
 
 Modify the `flake.nix` file so that its `.#dune.dynamic` and `.#dune.static`
