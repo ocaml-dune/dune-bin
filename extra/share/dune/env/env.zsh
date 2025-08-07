@@ -7,7 +7,7 @@ __dune_env() {
   fi
   local ROOT="$1"
 
-  # Add dune to PATH unless its already present.
+  # Add dune to PATH unless it's already present.
   # Affix colons on either side of $PATH to simplify matching (based on
   # rustup's env script).
   case :"$PATH": in
