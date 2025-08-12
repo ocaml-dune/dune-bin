@@ -2,16 +2,68 @@ name: test
 on: [push, pull_request]
 jobs:
 
-  shellcheck:
+  test-make-tarball:
+    name: "Test that we can build the binary distro and package it as a tarball"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-13
+            name: x86_64-apple-darwin
+            output: .#dune.dynamic
+          - os: macos-14
+            name: aarch64-apple-darwin
+            output: .#dune.dynamic
+          - os: ubuntu-latest
+            name: x86_64-unknown-linux-musl
+            output: .#dune.static
+    steps:
+      - run: echo NAME=dune-${{ matrix.name }} >> $GITHUB_ENV
+      - uses: actions/checkout@v4
+      - if: matrix.os == 'ubuntu-latest'
+        name: "Install shells on ubuntu"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zsh fish
+      - if: matrix.os != 'ubuntu-latest'
+        name: "Install shells on macos"
+        run: brew install fish
+      - uses: cachix/install-nix-action@v31
+      - name: "Build the binary distro and package it as a tarball"
+        run: ./make_tarball.sh $NAME ${{ matrix.output }}
+      - name: "Extract the tarball"
+        run: tar xf $NAME.tar.gz
+      - name: "Test that we can env scripts and the dune executable is in the expected place"
+        run: |
+          bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          zsh -c  '. $NAME/share/dune/env/env.zsh;  __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          sh -c   '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+
+
+  test-make-tarball-shellcheck:
+    name: "Run shellcheck on the build script"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Install shellcheck"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: "Run shellcheck on the build script"
+        run: shellcheck make_tarball.sh
+
+
+  test-env-script-shellcheck:
     name: "Run shellcheck on the shell env script"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: "Install shellcheck"
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y shellcheck
-    - name: "Run shellcheck on the shell env script"
-      run: |
-        # exclude warning for sourcing missing external file
-        shellcheck extra/share/dune/env/env.sh extra/share/dune/env/env.bash
+      - uses: actions/checkout@v4
+      - name: "Install shellcheck"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: "Run shellcheck on the shell env script"
+        run: |
+          # exclude warning for sourcing missing external file
+          shellcheck extra/share/dune/env/env.sh extra/share/dune/env/env.bash
