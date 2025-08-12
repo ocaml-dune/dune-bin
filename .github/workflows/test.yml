@@ -1,0 +1,17 @@
+name: test
+on: [push, pull_request]
+jobs:
+
+  shellcheck:
+    name: "Run shellcheck on the shell env script"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: "Install shellcheck"
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    - name: "Run shellcheck on the shell env script"
+      run: |
+        # exclude warning for sourcing missing external file
+        shellcheck extra/share/dune/env/env.sh extra/share/dune/env/env.bash
