@@ -24,11 +24,11 @@
       in {
         packages = {
           dune = make-dune-pkgs {
-            ref = "main";
-            rev = "fd307dfd897c0d764bbf5b151e01f99f6be05111";
+            ref = "3.19.1";
+            rev = "76c0c3941798f81dcc13a305d7abb120c191f5fa";
             completion = {
-              ref = "main";
-              rev = "42c6489d175cb81be58e052ca951186d6b2291d1";
+              ref = "3.19.1";
+              rev = "a56e105760f5cc49369ee012aa1b790f7443bd45";
             };
           };
         };
