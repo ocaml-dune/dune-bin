@@ -20,9 +20,12 @@ __dune_env() {
       ;;
   esac
 
-  # completions via bash compat
-  autoload -Uz compinit bashcompinit
-  compinit
-  bashcompinit
-  . "$ROOT"/share/bash-completion/completions/dune
+  # Only load completions if the shell is interactive.
+  if [ -t 0 ]; then
+    # completions via bash compat
+    autoload -Uz compinit bashcompinit
+    compinit
+    bashcompinit
+    . "$ROOT"/share/bash-completion/completions/dune
+  fi
 }

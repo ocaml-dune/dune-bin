@@ -20,8 +20,11 @@ __dune_env() {
       ;;
   esac
 
-  # Load bash completions for dune.
-  # Suppress warning from shellcheck as it can't see the completion script.
-  # shellcheck disable=SC1091
-  . "$ROOT"/share/bash-completion/completions/dune
+  # Only load completions if the shell is interactive.
+  if [ -t 0 ]; then
+    # Load bash completions for dune.
+    # Suppress warning from shellcheck as it can't see the completion script.
+    # shellcheck disable=SC1091
+    . "$ROOT"/share/bash-completion/completions/dune
+  fi
 }
