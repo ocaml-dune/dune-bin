@@ -2,8 +2,8 @@ name: test
 on: [push, pull_request]
 jobs:
 
-  test-make-tarball:
-    name: "Test that we can build the binary distro and package it as a tarball"
+  test-env-scripts:
+    name: "Test the env scripts packaged in the dune binary distro"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -33,12 +33,56 @@ jobs:
         run: ./make_tarball.sh $NAME ${{ matrix.output }}
       - name: "Extract the tarball"
         run: tar xf $NAME.tar.gz
-      - name: "Test that we can env scripts and the dune executable is in the expected place"
+      - name: "Test that we can run the env scripts and the dune executable is in the expected place"
         run: |
           bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
           zsh -c  '. $NAME/share/dune/env/env.zsh;  __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
-          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
           sh -c   '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+      - name: "Exercise that running __dune_env twice is benign since some logic only runs the second time they are sourced"
+        run: |
+          bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          zsh -c  '. $NAME/share/dune/env/env.zsh;  __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          sh -c   '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+      - name: "Make a fake opam switch and add it to PATH in between calls to __dune_env simulating a shell config with both opam and dune installed"
+        run: |
+          # Make a fake opam installation of dune
+          mkdir -p ~/.opam/default/bin
+          printf '%s\necho "%s"' '#!/bin/sh' 'fake dune' > ~/.opam/default/bin/dune
+          chmod a+x ~/.opam/default/bin/dune
+
+          # Test adding the fake opam switch to the path after __dune_env
+          # causes opam's dune to take precedence, and that calling __dune_env
+          # a second time causes the binary distro's dune to take precedence.
+          bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; test $(which dune) = ~/.opam/default/bin/dune'
+          bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          zsh -c  '. $NAME/share/dune/env/env.zsh;  __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; test $(which dune) = ~/.opam/default/bin/dune'
+          zsh -c  '. $NAME/share/dune/env/env.zsh;  __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          sh -c   '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; test $(which dune) = ~/.opam/default/bin/dune'
+          sh -c   '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; fish_add_path --prepend --move --path ~/.opam/default/bin; test $(which dune) = ~/.opam/default/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; fish_add_path --prepend --move --path ~/.opam/default/bin; __dune_env $PWD/$NAME; test $(which dune) = $PWD/$NAME/bin/dune'
+
+      - name: "Test that opam paths later in the PATH variable are preserved by multiple calls to __dune_env"
+        run: |
+          printf '%s\necho "%s"' '#!/bin/sh' 'only in opam bin' > ~/.opam/default/bin/only-in-opam-bin
+          chmod a+x ~/.opam/default/bin/only-in-opam-bin
+          bash -c '. $NAME/share/dune/env/env.bash; export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; only-in-opam-bin'
+          zsh -c  '. $NAME/share/dune/env/env.zsh;  export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; only-in-opam-bin'
+          sh -c   '. $NAME/share/dune/env/env.sh;   export PATH=~/.opam/default/bin:$PATH; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; only-in-opam-bin'
+          fish -c '. $NAME/share/dune/env/env.fish; fish_add_path --prepend --move --path ~/.opam/default/bin; __dune_env $PWD/$NAME; __dune_env $PWD/$NAME; only-in-opam-bin'
+
+      - name: "Test that non-opam changes to PATH between two calls to __dune_env have their effect preserved"
+        run: |
+          # Simulate the user setting up a custom version of dune (e.g. what a dune developer might do to try out local changes)
+          mkdir -p ~/bin
+          printf '%s\necho "%s"' '#!/bin/sh' 'fake dune' > ~/bin/dune
+          chmod a+x ~/bin/dune
+          bash -c '. $NAME/share/dune/env/env.bash; __dune_env $PWD/$NAME; export PATH=~/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = ~/bin/dune'
+          zsh  -c '. $NAME/share/dune/env/env.zsh ; __dune_env $PWD/$NAME; export PATH=~/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = ~/bin/dune'
+          sh   -c '. $NAME/share/dune/env/env.sh;   __dune_env $PWD/$NAME; export PATH=~/bin:$PATH; __dune_env $PWD/$NAME; test $(which dune) = ~/bin/dune'
+          fish -c '. $NAME/share/dune/env/env.fish; __dune_env $PWD/$NAME; fish_add_path --prepend --move --path ~/bin; __dune_env $PWD/$NAME; test $(which dune) = ~/bin/dune'
 
 
   test-make-tarball-shellcheck:
@@ -65,5 +109,4 @@ jobs:
           sudo apt-get install -y shellcheck
       - name: "Run shellcheck on the shell env script"
         run: |
-          # exclude warning for sourcing missing external file
           shellcheck extra/share/dune/env/env.sh extra/share/dune/env/env.bash
