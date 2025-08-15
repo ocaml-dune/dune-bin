@@ -19,7 +19,6 @@ let
     export GIT_AUTHOR_NAME=user
     export GIT_AUTHOR_EMAIL=user@example.com
     git init
-    git add .
     git commit --allow-empty -m dummy
     git tag ${ref} -am dummy
   '';
