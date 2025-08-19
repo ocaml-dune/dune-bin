@@ -5,10 +5,7 @@ let
     ref = ref;
     rev = rev;
   };
-  completion-src = fetchGit {
-    url = "https://github.com/gridbugs/dune-completion-scripts";
-    inherit (completion) ref rev;
-  };
+  completion-src = fetchGit completion;
   # This creates a git repo and creates an annotated tag named after the
   # current version of dune. This is necessary for the resulting dune
   # executable to print the correct version in the output of `dune --version`.

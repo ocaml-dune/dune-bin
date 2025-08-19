@@ -13,7 +13,7 @@ better compatibility with non-glibc distros), x86_64-macos and aarch64-macos.
 
 ## Installation
 
-To install the binaries released here, use the 
+To install the binaries released here, use the
 [dune-bin-install](https://github.com/ocaml-dune/dune-bin-install) script, or
 see that script for manual installation.
 

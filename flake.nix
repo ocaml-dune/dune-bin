@@ -27,6 +27,7 @@
             ref = "main";
             rev = "fd307dfd897c0d764bbf5b151e01f99f6be05111";
             completion = {
+              url = "https://github.com/gridbugs/dune-completion-scripts";
               ref = "main";
               rev = "42c6489d175cb81be58e052ca951186d6b2291d1";
             };
