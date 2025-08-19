@@ -44,7 +44,7 @@ __dune_env() {
         export __DUNE_SETUP_STATE=success
 
         # Only load completions if the shell is interactive.
-        if [ -t 0 ]; then
+        if [ -t 0 ] && [ -f "$ROOT"/share/bash-completion/completions/dune ]; then
           # completions via bash compat
           autoload -Uz compinit bashcompinit
           compinit

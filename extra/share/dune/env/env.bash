@@ -47,7 +47,7 @@ __dune_env() {
         export __DUNE_SETUP_STATE=success
 
         # Only load completions if the shell is interactive.
-        if [ -t 0 ]; then
+        if [ -t 0 ] && [ -f "$ROOT"/share/bash-completion/completions/dune ]; then
           # Load bash completions for dune.
           # Suppress warning from shellcheck as it can't see the completion script.
           # shellcheck disable=SC1091
