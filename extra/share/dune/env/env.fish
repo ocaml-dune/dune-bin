@@ -33,8 +33,8 @@ function __dune_env
             # current environment (possibly by the user sourcing their shell config
             # or nesting shell sessions), and the previous time it was called it
             # successfully modified the environment to give precedence to our dune
-            # executable. check that our dune still has precedence, and attempt to
-            # undo any opam-specific path shenanigans that have taken place since the
+            # executable. Check that our dune still has precedence, and attempt to
+            # undo any opam-specific PATH shenanigans that have taken place since the
             # last time this function was called.
             if [ "$(type -P dune)" != "$dune_bin/dune" ]
                 if contains "$dune_bin" $PATH
