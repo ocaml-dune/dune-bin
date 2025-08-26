@@ -47,7 +47,7 @@ __dune_env() {
         export __DUNE_SETUP_STATE=success
 
         # Only load completions if the shell is interactive.
-        if [ -t 0 ]; then
+        if [ -t 0 ] && [ -f "$ROOT"/share/bash-completion/completions/dune ]; then
           # Load bash completions for dune.
           # Suppress warning from shellcheck as it can't see the completion script.
           # shellcheck disable=SC1091
@@ -68,8 +68,8 @@ __dune_env() {
       # current environment (possibly by the user sourcing their shell config
       # or nesting shell sessions), and the previous time it was called it
       # successfully modified the environment to give precedence to our dune
-      # executable. check that our dune still has precedence, and attempt to
-      # undo any opam-specific path shenanigans that have taken place since the
+      # executable. Check that our dune still has precedence, and attempt to
+      # undo any opam-specific PATH shenanigans that have taken place since the
       # last time this function was called.
       if [ "$(__dune_which)" != "$ROOT/bin/dune" ]; then
         case :"$PATH": in

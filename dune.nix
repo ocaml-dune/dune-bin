@@ -5,10 +5,7 @@ let
     ref = ref;
     rev = rev;
   };
-  completion-src = fetchGit {
-    url = "https://github.com/gridbugs/dune-completion-scripts";
-    inherit (completion) ref rev;
-  };
+  completion-src = if isNull completion then null else fetchGit completion;
   # This creates a git repo and creates an annotated tag named after the
   # current version of dune. This is necessary for the resulting dune
   # executable to print the correct version in the output of `dune --version`.
@@ -48,9 +45,16 @@ let
     dontAddPrefix = true;
     dontAddStaticConfigureFlags = !static;
     configurePlatforms = [ ];
-    preInstall = ''
-      mkdir -p $out/share/bash-completion/completions
-      cp ${completion-src}/bash.sh $out/share/bash-completion/completions/dune
+    preInstall = let
+      for-completion = if isNull completion-src then
+        ""
+      else ''
+        mkdir -p $out/share/bash-completion/completions
+        cp ${completion-src}/bash.sh $out/share/bash-completion/completions/dune
+      '';
+    in ''
+      ${for-completion}
+      mkdir -p $out/share
       cp -r ${./extra}/* $out
     '';
     installFlags = [ "PREFIX=${placeholder "out"}" ];
