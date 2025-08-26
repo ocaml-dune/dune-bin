@@ -24,12 +24,12 @@
       in {
         packages = {
           dune = make-dune-pkgs {
-            ref = "main";
-            rev = "fd307dfd897c0d764bbf5b151e01f99f6be05111";
+            ref = "3.20.1";
+            rev = "84b524ad0b337a95e44a7c307b1c237d20075272";
             completion = {
               url = "https://github.com/gridbugs/dune-completion-scripts";
-              ref = "main";
-              rev = "42c6489d175cb81be58e052ca951186d6b2291d1";
+              ref = "3.20.0";
+              rev = "71fe0bb40c98a39e5626f7147407278d8ec9d0cf";
             };
           };
         };
