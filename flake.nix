@@ -24,8 +24,8 @@
       in {
         packages = {
           dune = make-dune-pkgs {
-            ref = "main";
-            rev = "fd307dfd897c0d764bbf5b151e01f99f6be05111";
+            ref = "3.21.0";
+            rev = "f38de6ecbde4238a2e9acfa8be0644ae3dd7cb3c";
             completion = {
               url = "https://github.com/gridbugs/dune-completion-scripts";
               ref = "main";
